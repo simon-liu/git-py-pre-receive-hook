@@ -6,15 +6,15 @@
 
     pip3 install git+https://github.com/simon-liu/git-py-pre-receive-hook.git
 
-    ln -s /path/to/bin/git-py-pre-receive /home/git/repositories/my-project.git/hooks/pre-receive
+    ln -s $(which git-py-pre-receive) /home/git/repositories/my-project.git/hooks/pre-receive
 
 检查效果：
 
 .. class:: no-web
 
     .. image:: ../master/screenshot.png?raw=true
-        :width: 100%
-        :align: center
+        :width: 80%
+        :align: left
 
 .. class:: no-web
 
