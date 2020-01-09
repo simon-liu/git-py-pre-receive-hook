@@ -8,7 +8,11 @@ CommandResult = namedtuple(
 
 
 def get_exe_path(exe):
-    for dir_path in os.environ["PATH"].split(":"):
+    bin_path = (
+        "/usr/local/bin:/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:"
+        + os.environ["PATH"]
+    )
+    for dir_path in bin_path.split(":"):
         path = dir_path.strip('"') + "/" + exe
         if os.access(path, os.X_OK):
             return path

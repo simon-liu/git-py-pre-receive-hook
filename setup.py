@@ -1,10 +1,9 @@
-from setuptools import setup
-
 from git_py_pre_receive_hook import VERSION
+from setuptools import setup
 
 
 def readfile_as_string(fn):
-    with open(fn, "r") as fin:
+    with open(fn, "r", encoding="utf8") as fin:
         return fin.read()
 
 
