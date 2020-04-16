@@ -9,7 +9,7 @@ CommandResult = namedtuple(
 
 def get_exe_path(exe):
     bin_path = (
-        "/usr/local/bin:/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/python3/bin"
+        "/usr/local/bin:/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/python3/bin:"
         + os.environ["PATH"]
     )
     for dir_path in bin_path.split(":"):
