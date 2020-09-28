@@ -72,6 +72,8 @@ class Hook(CommandMixin):
 
     GIT_EXE_PATH = get_exe_path("git")
 
+    CHECK_ONLY = True
+
     def __init__(self, commits):
         if self.GIT_EXE_PATH is None:
             raise RuntimeError('can not find "git" command.')
@@ -94,13 +96,13 @@ class Hook(CommandMixin):
 
             errors += 1
             if errors >= self.SKIP_MORE_ERRORS:
-                return 1
+                return 0 if self.CHECK_ONLY else 1
 
         if errors:
             sys.stderr.write("\n")
             sys.stderr.flush()
 
-        return 1 if errors > 0 else 0
+        return (0 if self.CHECK_ONLY else 1) if errors > 0 else 0
 
     def _print_error(self, filename, error):
         sys.stderr.write("\n" + "-" * 60 + "\n")
