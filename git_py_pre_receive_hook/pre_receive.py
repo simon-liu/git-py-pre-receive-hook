@@ -31,7 +31,7 @@ class DefaultChecker(CommandMixin):
         "--diff",
         "-q",
     ]
-    FLAKE8_COMMAND_ARGS = ["--max-line-length=120", "--ignore=E203"]
+    FLAKE8_COMMAND_ARGS = ["--max-line-length=120", "--ignore=E203,E731"]
 
     BLACK_COMMAND_FORMAT_ERROR_CODE = 123
     BLACK_FORMAT_ERROR_MESSAGE = "can not format, maybe syntax error!"
