@@ -81,10 +81,15 @@ class Hook(CommandMixin):
 
     def run(self):
         errors = 0
+        checked = set()
         for filename, revision in self.changed_files.items():
             content = self._file_content(filename, revision)
             if not self._is_py_file(filename, content):
                 continue
+
+            if filename in checked:
+                continue
+            checked.add(filename)
 
             error = self._check_file(filename, content)
             if not error:
