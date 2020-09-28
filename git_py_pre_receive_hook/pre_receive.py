@@ -36,14 +36,14 @@ class DefaultChecker(CommandMixin):
         if self.BLACK_EXE_PATH is None:
             raise RuntimeError('can not find "black" command.')
 
-    def check(self, content):
+    def check(self, filename, content):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf8") as fp:
             fp.write(content)
             fp.flush()
 
             r = self.run_command([self.FLAKE8_EXE_PATH, "--max-line-length=120", fp.name])
             if r.return_code == self.FLAKE8_COMMAND_ERROR_CODE:
-                return r.stdout
+                return self._format_flake8_output(fp.name, filename, r.stdout)
 
             r = self.run_command([self.BLACK_EXE_PATH, "--line-length", "120", "--diff", "-q", fp.name])
             if r.return_code == self.BLACK_COMMAND_FORMAT_ERROR_CODE:
@@ -62,6 +62,9 @@ class DefaultChecker(CommandMixin):
                 return "\n".join(["difference:"] + diff)
 
             return None
+
+    def _format_flake8_output(self, temp_filename, filename, output):
+        return "\n".join([line.replace("%s:" % temp_filename, "%s:" % filename) for line in output.strip().split("\n")])
 
 
 class Hook(CommandMixin):
@@ -83,7 +86,7 @@ class Hook(CommandMixin):
             if not self._is_py_file(filename, content):
                 continue
 
-            error = self._check_file(content)
+            error = self._check_file(filename, content)
             if not error:
                 continue
 
@@ -105,8 +108,8 @@ class Hook(CommandMixin):
         sys.stderr.write("\n" + error.strip() + "\n")
         sys.stderr.flush()
 
-    def _check_file(self, content):
-        return self.checker.check(content)
+    def _check_file(self, filename, content):
+        return self.checker.check(filename, content)
 
     def _collect_changed_files(self, commits):
         ret = OrderedDict()
