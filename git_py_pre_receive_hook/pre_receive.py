@@ -25,8 +25,16 @@ class DefaultChecker(CommandMixin):
     BLACK_EXE_PATH = get_exe_path("black")
     FLAKE8_EXE_PATH = get_exe_path("flake8")
 
+    BLACK_COMMAND_ARGS = [
+        "--line-length",
+        "120",
+        "--diff",
+        "-q",
+    ]
+    FLAKE8_COMMAND_ARGS = ["--max-line-length=120", "--ignore=E203"]
+
     BLACK_COMMAND_FORMAT_ERROR_CODE = 123
-    FORMAT_ERROR_MESSAGE = "can not format, maybe syntax error!"
+    BLACK_FORMAT_ERROR_MESSAGE = "can not format, maybe syntax error!"
 
     FLAKE8_COMMAND_ERROR_CODE = 1
 
@@ -41,13 +49,13 @@ class DefaultChecker(CommandMixin):
             fp.write(content)
             fp.flush()
 
-            r = self.run_command([self.FLAKE8_EXE_PATH, "--max-line-length=120", fp.name])
+            r = self.run_command([self.FLAKE8_EXE_PATH] + self.FLAKE8_COMMAND_ARGS + [fp.name])
             if r.return_code == self.FLAKE8_COMMAND_ERROR_CODE:
                 return self._format_flake8_output(fp.name, filename, r.stdout)
 
-            r = self.run_command([self.BLACK_EXE_PATH, "--line-length", "120", "--diff", "-q", fp.name])
+            r = self.run_command([self.BLACK_EXE_PATH] + self.BLACK_COMMAND_ARGS + [fp.name])
             if r.return_code == self.BLACK_COMMAND_FORMAT_ERROR_CODE:
-                return self.FORMAT_ERROR_MESSAGE
+                return self.BLACK_FORMAT_ERROR_MESSAGE
 
             self.check_command_result(r)
 
