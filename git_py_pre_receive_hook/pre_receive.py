@@ -22,11 +22,13 @@ class Commit(object):
 
 
 class DefaultChecker(CommandMixin):
-
     BLACK_EXE_PATH = get_exe_path("black")
+    FLAKE8_EXE_PATH = get_exe_path("flake8")
 
     BLACK_COMMAND_FORMAT_ERROR_CODE = 123
     FORMAT_ERROR_MESSAGE = "can not format, maybe syntax error!"
+
+    FLAKE8_COMMAND_ERROR_CODE = 1
 
     DIFFERENCE_HIDE_MORE_LINES = 20
 
@@ -39,7 +41,11 @@ class DefaultChecker(CommandMixin):
             fp.write(content)
             fp.flush()
 
-            r = self.run_command([self.BLACK_EXE_PATH, "--diff", "-q", fp.name])
+            r = self.run_command([self.FLAKE8_EXE_PATH, "--max-line-length=120", fp.name])
+            if r.return_code == self.FLAKE8_COMMAND_ERROR_CODE:
+                return r.stdout
+
+            r = self.run_command([self.BLACK_EXE_PATH, "--line-length", "120", "--diff", "-q", fp.name])
             if r.return_code == self.BLACK_COMMAND_FORMAT_ERROR_CODE:
                 return self.FORMAT_ERROR_MESSAGE
 
@@ -59,7 +65,6 @@ class DefaultChecker(CommandMixin):
 
 
 class Hook(CommandMixin):
-
     SKIP_MORE_ERRORS = 3
 
     GIT_EXE_PATH = get_exe_path("git")
@@ -96,9 +101,7 @@ class Hook(CommandMixin):
 
     def _print_error(self, filename, error):
         sys.stderr.write("\n" + "-" * 60 + "\n")
-        sys.stderr.write(
-            'bad format for file "%s", please format by "black" command.\n' % filename
-        )
+        sys.stderr.write('bad format for file "%s", please format by "black" command.\n' % filename)
         sys.stderr.write("\n" + error.strip() + "\n")
         sys.stderr.flush()
 
@@ -140,11 +143,7 @@ class Hook(CommandMixin):
         r = self.run_command(cmd)
         self.check_command_result(r)
 
-        return {
-            filename: commit.new_sha1
-            for filename in r.stdout.strip().split("\n")
-            if filename
-        }
+        return {filename: commit.new_sha1 for filename in r.stdout.strip().split("\n") if filename}
 
 
 def main():
