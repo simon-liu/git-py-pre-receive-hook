@@ -70,16 +70,16 @@ class DefaultChecker(CommandMixin):
             return None
 
     def _format_black_output(self, stdout):
-        diff = self.black_version.strip().split("\n") + stdout.split("\n")[2:]
+        diff = stdout.split("\n")[2:]
         if len(diff) > self.DIFFERENCE_HIDE_MORE_LINES:
             diff = diff[: self.DIFFERENCE_HIDE_MORE_LINES]
             diff.append("")
             diff.append("Omit more ......")
 
-        return "\n".join(["difference:"] + diff)
+        return "\n".join(self.black_version.split("\n") + ["difference:"] + diff)
 
     def _format_flake8_output(self, temp_filename, filename, output):
-        lines = self.flake8_version.strip().split("\n") + output.strip().split("\n")
+        lines = self.flake8_version.split("\n") + output.strip().split("\n")
         return "\n".join([line.replace("%s:" % temp_filename, "%s:" % filename) for line in lines])
 
 
