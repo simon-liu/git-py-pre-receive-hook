@@ -43,6 +43,12 @@ class DefaultChecker(CommandMixin):
         if self.BLACK_EXE_PATH is None:
             raise RuntimeError('can not find "black" command.')
 
+        if self.FLAKE8_EXE_PATH is None:
+            raise RuntimeError('can not find "flake8" command.')
+
+        self.black_version = self.run_command([self.BLACK_EXE_PATH, "--version"]).stdout
+        self.flake8_version = self.run_command([self.FLAKE8_EXE_PATH, "--version"]).stdout
+
     def check(self, filename, content):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf8") as fp:
             fp.write(content)
@@ -58,20 +64,23 @@ class DefaultChecker(CommandMixin):
 
             self.check_command_result(r)
 
-            # black command diff output
             if r.stdout:
-                diff = r.stdout.split("\n")[2:]
-                if len(diff) > self.DIFFERENCE_HIDE_MORE_LINES:
-                    diff = diff[: self.DIFFERENCE_HIDE_MORE_LINES]
-                    diff.append("")
-                    diff.append("Omit more ......")
-
-                return "\n".join(["difference:"] + diff)
+                return self._format_black_output(r.stdout)
 
             return None
 
+    def _format_black_output(self, stdout):
+        diff = self.black_version.strip().split("\n") + stdout.split("\n")[2:]
+        if len(diff) > self.DIFFERENCE_HIDE_MORE_LINES:
+            diff = diff[: self.DIFFERENCE_HIDE_MORE_LINES]
+            diff.append("")
+            diff.append("Omit more ......")
+
+        return "\n".join(["difference:"] + diff)
+
     def _format_flake8_output(self, temp_filename, filename, output):
-        return "\n".join([line.replace("%s:" % temp_filename, "%s:" % filename) for line in output.strip().split("\n")])
+        lines = self.flake8_version.strip().split("\n") + output.strip().split("\n")
+        return "\n".join([line.replace("%s:" % temp_filename, "%s:" % filename) for line in lines])
 
 
 class Hook(CommandMixin):
