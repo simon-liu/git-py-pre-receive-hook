@@ -76,11 +76,17 @@ class DefaultChecker(CommandMixin):
             diff.append("")
             diff.append("Omit more ......")
 
-        return "\n".join(self.black_version.split("\n") + ["difference:"] + diff)
+        return "\n".join(self._black_version() + ["difference:"] + diff)
 
     def _format_flake8_output(self, temp_filename, filename, output):
-        lines = self.flake8_version.split("\n") + output.strip().split("\n")
+        lines = self._flake8_version() + output.strip().split("\n")
         return "\n".join([line.replace("%s:" % temp_filename, "%s:" % filename) for line in lines])
+
+    def _flake8_version(self):
+        return ["flake8 --version"] + self.flake8_version.split("\n")
+
+    def _black_version(self):
+        return ["black --version"] + self.black_version.split("\n")
 
 
 class Hook(CommandMixin):
@@ -122,7 +128,7 @@ class Hook(CommandMixin):
 
     def _print_error(self, filename, error):
         sys.stderr.write("\n" + "-" * 60 + "\n")
-        sys.stderr.write('bad format for file "%s", please format by "black" command.\n' % filename)
+        sys.stderr.write('bad format for file "%s".\n' % filename)
         sys.stderr.write("\n" + error.strip() + "\n")
         sys.stderr.flush()
 
