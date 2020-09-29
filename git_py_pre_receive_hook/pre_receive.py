@@ -26,8 +26,7 @@ class DefaultChecker(CommandMixin):
     FLAKE8_EXE_PATH = get_exe_path("flake8")
 
     BLACK_COMMAND_ARGS = [
-        "--line-length",
-        "120",
+        "--line-length=120",
         "--diff",
         "-q",
     ]
