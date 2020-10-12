@@ -1,4 +1,3 @@
-import pkgutil
 import subprocess
 import sys
 import tempfile
@@ -10,7 +9,7 @@ from git_py_pre_receive_hook.utils import CommandMixin, get_exe_path
 
 
 class Config(object):
-    DEFAULT_YML_CONTENT = pkgutil.get_data("git_py_pre_receive_hook", "py-pre-receive-hook.yml")
+    DEFAULT_YML_CONTENT = ""  # pkgutil.get_data("git_py_pre_receive_hook", "py-pre-receive-hook.yml")
 
     def __init__(self, yml_content):
         self.settings = yaml.load(yml_content or self.DEFAULT_YML_CONTENT)
