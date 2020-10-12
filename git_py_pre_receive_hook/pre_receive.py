@@ -13,7 +13,7 @@ class Config(object):
     DEFAULT_YML_CONTENT = pkgutil.get_data("git_py_pre_receive_hook", "py-pre-receive-hook.yml")
 
     def __init__(self, yml_content):
-        self.settings = yaml.load(yml_content or self.DEFAULT_YML_CONTENT)
+        self.settings = yaml.full_load(yml_content or self.DEFAULT_YML_CONTENT)
 
     @property
     def black_command_args(self):
