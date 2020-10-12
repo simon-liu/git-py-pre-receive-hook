@@ -1,9 +1,31 @@
+import pkgutil
 import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
 
+import yaml
+
 from git_py_pre_receive_hook.utils import CommandMixin, get_exe_path
+
+
+class Config(object):
+    DEFAULT_YML_CONTENT = pkgutil.get_data("git_py_pre_receive_hook", "py-pre-receive-hook.yml")
+
+    def __init__(self, yml_content):
+        self.settings = yaml.load(yml_content or self.DEFAULT_YML_CONTENT)
+
+    @property
+    def black_command_args(self):
+        return self.settings.get("black_cmd_args", [])
+
+    @property
+    def flake8_cmd_args(self):
+        return self.settings.get("flake8_cmd_args", [])
+
+    @property
+    def check_only(self):
+        return self.settings.get("check_only", False)
 
 
 class Commit(object):
@@ -25,13 +47,6 @@ class DefaultChecker(CommandMixin):
     BLACK_EXE_PATH = get_exe_path("black")
     FLAKE8_EXE_PATH = get_exe_path("flake8")
 
-    BLACK_COMMAND_ARGS = [
-        "--line-length=120",
-        "--diff",
-        "-q",
-    ]
-    FLAKE8_COMMAND_ARGS = ["--max-line-length=120", "--ignore=E203,E731,E722"]
-
     BLACK_COMMAND_FORMAT_ERROR_CODE = 123
     BLACK_FORMAT_ERROR_MESSAGE = "can not format, maybe syntax error!"
 
@@ -39,13 +54,14 @@ class DefaultChecker(CommandMixin):
 
     DIFFERENCE_HIDE_MORE_LINES = 20
 
-    def __init__(self):
+    def __init__(self, config):
         if self.BLACK_EXE_PATH is None:
             raise RuntimeError('can not find "black" command.')
 
         if self.FLAKE8_EXE_PATH is None:
             raise RuntimeError('can not find "flake8" command.')
 
+        self.config = config
         self.black_version = self.run_command([self.BLACK_EXE_PATH, "--version"]).stdout
         self.flake8_version = self.run_command([self.FLAKE8_EXE_PATH, "--version"]).stdout
 
@@ -54,11 +70,11 @@ class DefaultChecker(CommandMixin):
             fp.write(content)
             fp.flush()
 
-            r = self.run_command([self.FLAKE8_EXE_PATH] + self.FLAKE8_COMMAND_ARGS + [fp.name])
+            r = self.run_command([self.FLAKE8_EXE_PATH] + self.config.flake8_cmd_args + [fp.name])
             if r.return_code == self.FLAKE8_COMMAND_ERROR_CODE:
                 return self._format_flake8_output(fp.name, filename, r.stdout)
 
-            r = self.run_command([self.BLACK_EXE_PATH] + self.BLACK_COMMAND_ARGS + [fp.name])
+            r = self.run_command([self.BLACK_EXE_PATH] + self.config.black_command_args + [fp.name])
             if r.return_code == self.BLACK_COMMAND_FORMAT_ERROR_CODE:
                 return self.BLACK_FORMAT_ERROR_MESSAGE
 
@@ -94,14 +110,13 @@ class Hook(CommandMixin):
 
     GIT_EXE_PATH = get_exe_path("git")
 
-    CHECK_ONLY = True
-
     def __init__(self, commits):
         if self.GIT_EXE_PATH is None:
             raise RuntimeError('can not find "git" command.')
 
+        self.config = Config(self._file_content(".py-pre-receive-hook.yml", "HEAD"))
         self.changed_files = self._collect_changed_files(commits)
-        self.checker = DefaultChecker()
+        self.checker = DefaultChecker(self.config)
 
     def run(self):
         errors = 0
@@ -118,13 +133,13 @@ class Hook(CommandMixin):
 
             errors += 1
             if errors >= self.SKIP_MORE_ERRORS:
-                return 0 if self.CHECK_ONLY else 1
+                return 0 if self.config.check_only else 1
 
         if errors:
             sys.stderr.write("\n")
             sys.stderr.flush()
 
-        return (0 if self.CHECK_ONLY else 1) if errors > 0 else 0
+        return (0 if self.config.check_only else 1) if errors > 0 else 0
 
     def _print_error(self, filename, error):
         sys.stderr.write("\n" + "-" * 60 + "\n")
