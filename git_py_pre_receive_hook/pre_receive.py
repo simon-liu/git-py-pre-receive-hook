@@ -1,3 +1,5 @@
+import logging
+import pkgutil
 import subprocess
 import sys
 import tempfile
@@ -9,7 +11,7 @@ from git_py_pre_receive_hook.utils import CommandMixin, get_exe_path
 
 
 class Config(object):
-    DEFAULT_YML_CONTENT = ""  # pkgutil.get_data("git_py_pre_receive_hook", "py-pre-receive-hook.yml")
+    DEFAULT_YML_CONTENT = pkgutil.get_data("git_py_pre_receive_hook", "py-pre-receive-hook.yml")
 
     def __init__(self, yml_content):
         self.settings = yaml.load(yml_content or self.DEFAULT_YML_CONTENT)
@@ -113,7 +115,7 @@ class Hook(CommandMixin):
         if self.GIT_EXE_PATH is None:
             raise RuntimeError('can not find "git" command.')
 
-        self.config = Config(self._file_content(".py-pre-receive-hook.yml", "HEAD"))
+        self.config = Config(self._load_config_content())
         self.changed_files = self._collect_changed_files(commits)
         self.checker = DefaultChecker(self.config)
 
@@ -168,6 +170,13 @@ class Hook(CommandMixin):
         r = self.run_command([self.GIT_EXE_PATH, "show", revision + ":" + filename])
         self.check_command_result(r)
         return r.stdout
+
+    def _load_config_content(self):
+        try:
+            return self._file_content(".py-pre-receive-hook.yml", "HEAD")
+        except Exception as e:
+            logging.exception(e)
+            return ""
 
     def _changed_files(self, commit):
         if commit.old_is_null:

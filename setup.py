@@ -25,6 +25,7 @@ setup(
     description="Git pre-receive hook to check commits and code style",
     long_description=README,
     entry_points={"console_scripts": ["git-py-pre-receive=git_py_pre_receive_hook.pre_receive:main"]},
+    include_package_data=True,
     data_files=[
         ("git_py_pre_receive_hook", ["git_py_pre_receive_hook/py-pre-receive-hook.yml"]),
     ],
