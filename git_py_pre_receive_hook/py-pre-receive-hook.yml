@@ -1,0 +1,7 @@
+# 拷贝一份放到工程根目录下：.py-pre-receive-hook.yml
+
+flake8_cmd_args: [ "--max-line-length=120", "--ignore=E203,E731,E722" ]
+
+black_cmd_args: [ "--line-length=120", "--diff", "-q" ]
+
+check_only: false
