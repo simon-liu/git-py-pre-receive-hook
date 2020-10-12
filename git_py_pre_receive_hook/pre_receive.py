@@ -205,7 +205,8 @@ def main():
         return Hook(commits).run()
     except subprocess.CalledProcessError as ex:
         sys.stderr.write(str(ex) + "\n")
-        sys.exit(ex.returncode)
+        sys.exit(0)
+        # sys.exit(ex.returncode)
 
 
 if __name__ == "__main__":
