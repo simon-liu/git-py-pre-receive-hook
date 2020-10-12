@@ -1,4 +1,3 @@
-import logging
 import pkgutil
 import subprocess
 import sys
@@ -174,8 +173,7 @@ class Hook(CommandMixin):
     def _load_config_content(self):
         try:
             return self._file_content(".py-pre-receive-hook.yml", "HEAD")
-        except Exception as e:
-            logging.exception(e)
+        except:
             return ""
 
     def _changed_files(self, commit):
