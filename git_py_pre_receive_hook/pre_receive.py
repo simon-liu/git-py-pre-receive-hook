@@ -110,6 +110,8 @@ class Hook(CommandMixin):
 
     GIT_EXE_PATH = get_exe_path("git")
 
+    GIT_FILE_DOES_NOT_EXISTS_ERROR = 128
+
     def __init__(self, commits):
         if self.GIT_EXE_PATH is None:
             raise RuntimeError('can not find "git" command.')
@@ -121,6 +123,9 @@ class Hook(CommandMixin):
     def run(self):
         errors = 0
         for filename, revision in self.changed_files.items():
+            if not self._file_exists(filename, revision):
+                continue
+
             content = self._file_content(filename, revision)
             if not self._is_py_file(filename, content):
                 continue
@@ -165,16 +170,20 @@ class Hook(CommandMixin):
         first_line = content.splitlines()[0]
         return first_line.startswith("#!") and first_line.find("python") > -1
 
+    def _file_exists(self, filename, revision):
+        r = self.run_command([self.GIT_EXE_PATH, "show", revision + ":" + filename])
+        return r.return_code != self.GIT_FILE_DOES_NOT_EXISTS_ERROR
+
     def _file_content(self, filename, revision):
         r = self.run_command([self.GIT_EXE_PATH, "show", revision + ":" + filename])
         self.check_command_result(r)
         return r.stdout
 
     def _load_config_content(self):
-        try:
-            return self._file_content(".py-pre-receive-hook.yml", "HEAD")
-        except:
+        if not self._file_exists(".py-pre-receive-hook.yml", "HEAD"):
             return ""
+
+        return self._file_content(".py-pre-receive-hook.yml", "HEAD")
 
     def _changed_files(self, commit):
         if commit.old_is_null:
