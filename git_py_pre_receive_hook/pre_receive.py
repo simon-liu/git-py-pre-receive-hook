@@ -130,11 +130,6 @@ class Hook(CommandMixin):
             if not self._file_exists(filename, revision):
                 continue
 
-            if self._ignore(filename):
-                sys.stderr.write("ignore file: " + filename + "\n")
-                sys.stderr.flush()
-                continue
-
             content = self._file_content(filename, revision)
             if not self._is_py_file(filename, content):
                 continue
@@ -145,7 +140,7 @@ class Hook(CommandMixin):
 
             self._print_error(filename, error)
 
-            errors += 1
+            errors += 0 if self._ignore(filename) else 1
             if errors >= self.SKIP_MORE_ERRORS:
                 return 0 if self.config.check_only else 1
 
