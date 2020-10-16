@@ -131,7 +131,7 @@ class Hook(CommandMixin):
                 continue
 
             if self._ignore(filename):
-                sys.stderr.write("ignore file: " + filename)
+                sys.stderr.write("ignore file: " + filename + "\n")
                 sys.stderr.flush()
                 continue
 
