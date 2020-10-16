@@ -127,6 +127,9 @@ class Hook(CommandMixin):
         self.checker = DefaultChecker(self.config)
 
     def run(self):
+        if self._branch_name() != "master":
+            return
+
         # 不允许修改配置文件
         self._check_conf_file()
 
@@ -201,6 +204,11 @@ class Hook(CommandMixin):
         r = self.run_command([self.GIT_EXE_PATH, "show", revision + ":" + filename])
         self.check_command_result(r)
         return r.stdout
+
+    def _branch_name(self):
+        r = self.run_command([self.GIT_EXE_PATH, "rev-parse", "--abbrev-ref", "HEAD"])
+        self.check_command_result(r)
+        return r.stdout.strip()
 
     def _load_config_content(self):
         if not self._file_exists(self.CONF_FILE, "HEAD"):
