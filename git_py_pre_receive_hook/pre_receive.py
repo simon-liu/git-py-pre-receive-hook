@@ -27,6 +27,10 @@ class Config(object):
     def check_only(self):
         return self.settings.get("check_only", False)
 
+    @property
+    def ignore_files(self):
+        return set(self.settings.get("ignore_files", []))
+
 
 class Commit(object):
     def __init__(self, old_sha1, new_sha1, ref):
@@ -126,6 +130,11 @@ class Hook(CommandMixin):
             if not self._file_exists(filename, revision):
                 continue
 
+            if self._ignore(filename):
+                sys.stderr.write("ignore file: " + filename)
+                sys.stderr.flush()
+                continue
+
             content = self._file_content(filename, revision)
             if not self._is_py_file(filename, content):
                 continue
@@ -145,6 +154,16 @@ class Hook(CommandMixin):
             sys.stderr.flush()
 
         return (0 if self.config.check_only else 1) if errors > 0 else 0
+
+    def _ignore(self, filename):
+        if filename in self.config.ignore_files:
+            return True
+
+        for v in self.config.ignore_files:
+            if v.endswith("/") and filename.startswith(v):
+                return True
+
+        return False
 
     def _print_error(self, filename, error):
         sys.stderr.write("\n" + "-" * 60 + "\n")
@@ -221,8 +240,7 @@ def main():
         return Hook(commits).run()
     except subprocess.CalledProcessError as ex:
         sys.stderr.write(str(ex) + "\n")
-        sys.exit(0)
-        # sys.exit(ex.returncode)
+        sys.exit(ex.returncode)
 
 
 if __name__ == "__main__":
