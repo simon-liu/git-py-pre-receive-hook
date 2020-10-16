@@ -167,8 +167,9 @@ class Hook(CommandMixin):
 
     def _print_error(self, filename, error):
         sys.stderr.write("\n" + "-" * 60 + "\n")
-        sys.stderr.write('bad format for file "%s".\n' % filename)
-        sys.stderr.write("\n" + error.strip() + "\n")
+        sys.stderr.write(f"\n branch: {self._branch_name()}\n")
+        sys.stderr.write(f'bad format for file "{filename}".\n')
+        sys.stderr.write(f"\n{error.strip()}\n")
         sys.stderr.flush()
 
     def _check_file(self, filename, content):
