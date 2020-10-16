@@ -215,7 +215,7 @@ class Hook(CommandMixin):
     def _committer(self):
         r = self.run_command([self.GIT_EXE_PATH, "log", "-1", "--pretty=%an"])
         self.check_command_result(r)
-        return r.stdout
+        return r.stdout.strip()
 
     def _changed_files(self, commit):
         if commit.old_is_null:
