@@ -31,10 +31,6 @@ class Config(object):
     def ignore_files(self):
         return set(self.settings.get("ignore_files", []))
 
-    @property
-    def administrators(self):
-        return set(self.settings.get("administrators", []))
-
 
 class Commit(object):
     def __init__(self, old_sha1, new_sha1, ref):
@@ -131,6 +127,9 @@ class Hook(CommandMixin):
         self.checker = DefaultChecker(self.config)
 
     def run(self):
+        # 不允许修改配置文件
+        self._protect_conf_file()
+
         errors = 0
         for filename, revision in self.changed_files.items():
             if not self._file_exists(filename, revision):
@@ -156,13 +155,6 @@ class Hook(CommandMixin):
 
         return (0 if self.config.check_only else 1) if errors > 0 else 0
 
-    def _check_conf_updated(self):
-        if self.CONF_FILE not in self.changed_files:
-            return
-
-        if self.config.administrators and self._committer() not in self.config.administrators:
-            raise ValueError("permission denied")
-
     def _ignore(self, filename):
         if filename in self.config.ignore_files:
             return True
@@ -181,6 +173,10 @@ class Hook(CommandMixin):
 
     def _check_file(self, filename, content):
         return self.checker.check(filename, content)
+
+    def _protect_conf_file(self):
+        if self.CONF_FILE in self.changed_files:
+            raise ValueError("permission denied")
 
     def _collect_changed_files(self, commits):
         ret = OrderedDict()
@@ -211,11 +207,6 @@ class Hook(CommandMixin):
             return ""
 
         return self._file_content(self.CONF_FILE, "HEAD")
-
-    def _committer(self):
-        r = self.run_command([self.GIT_EXE_PATH, "log", "-1", "--pretty=%an"])
-        self.check_command_result(r)
-        return r.stdout.strip()
 
     def _changed_files(self, commit):
         if commit.old_is_null:
