@@ -31,6 +31,10 @@ class Config(object):
     def ignore_files(self):
         return set(self.settings.get("ignore_files", []))
 
+    @property
+    def administrators(self):
+        return set(self.settings.get("administrators", []))
+
 
 class Commit(object):
     def __init__(self, old_sha1, new_sha1, ref):
@@ -116,6 +120,8 @@ class Hook(CommandMixin):
 
     GIT_FILE_DOES_NOT_EXISTS_ERROR = 128
 
+    CONF_FILE = ".py-pre-receive-hook.yml"
+
     def __init__(self, commits):
         if self.GIT_EXE_PATH is None:
             raise RuntimeError('can not find "git" command.')
@@ -149,6 +155,13 @@ class Hook(CommandMixin):
             sys.stderr.flush()
 
         return (0 if self.config.check_only else 1) if errors > 0 else 0
+
+    def _check_conf_updated(self):
+        if self.CONF_FILE not in self.changed_files:
+            return
+
+        if self.config.administrators and self._committer() not in self.config.administrators:
+            raise ValueError("permission denied")
 
     def _ignore(self, filename):
         if filename in self.config.ignore_files:
@@ -194,10 +207,15 @@ class Hook(CommandMixin):
         return r.stdout
 
     def _load_config_content(self):
-        if not self._file_exists(".py-pre-receive-hook.yml", "HEAD"):
+        if not self._file_exists(self.CONF_FILE, "HEAD"):
             return ""
 
-        return self._file_content(".py-pre-receive-hook.yml", "HEAD")
+        return self._file_content(self.CONF_FILE, "HEAD")
+
+    def _committer(self):
+        r = self.run_command([self.GIT_EXE_PATH, "log", "-1", "--pretty=%an"])
+        self.check_command_result(r)
+        return r.stdout
 
     def _changed_files(self, commit):
         if commit.old_is_null:
