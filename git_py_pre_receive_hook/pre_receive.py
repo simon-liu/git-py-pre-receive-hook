@@ -128,7 +128,7 @@ class Hook(CommandMixin):
 
     def run(self):
         # 不允许修改配置文件
-        self._protect_conf_file()
+        self._check_conf_file()
 
         errors = 0
         for filename, revision in self.changed_files.items():
@@ -174,7 +174,7 @@ class Hook(CommandMixin):
     def _check_file(self, filename, content):
         return self.checker.check(filename, content)
 
-    def _protect_conf_file(self):
+    def _check_conf_file(self):
         if self.CONF_FILE in self.changed_files:
             raise ValueError("permission denied")
 
