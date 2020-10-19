@@ -127,9 +127,6 @@ class Hook(CommandMixin):
         self.checker = DefaultChecker(self.config)
 
     def run(self):
-        # 不允许修改配置文件
-        self._check_conf_file()
-
         errors = 0
         for filename, revision in self.changed_files.items():
             if not self._file_exists(filename, revision):
@@ -177,10 +174,6 @@ class Hook(CommandMixin):
 
     def _check_file(self, filename, content):
         return self.checker.check(filename, content)
-
-    def _check_conf_file(self):
-        if self.CONF_FILE in self.changed_files and self._branch_name() != "master":
-            raise ValueError("permission denied: " + self._branch_name())
 
     def _collect_changed_files(self, commits):
         ret = OrderedDict()
