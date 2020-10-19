@@ -1,9 +1,9 @@
 import pkgutil
 import subprocess
-import sys
 import tempfile
 from collections import OrderedDict
 
+import sys
 import yaml
 
 from git_py_pre_receive_hook.utils import CommandMixin, get_exe_path
@@ -166,10 +166,13 @@ class Hook(CommandMixin):
         return False
 
     def _print_error(self, filename, error):
-        sys.stderr.write("\n" + "-" * 60 + "\n")
-        sys.stderr.write(f"\n branch: {self._branch_name()}\n")
-        sys.stderr.write(f'bad format for file "{filename}".\n')
-        sys.stderr.write(f"\n{error.strip()}\n")
+        lines = [
+            "\n" + "-" * 60,
+            f"\nbranch: {self._branch_name()}",
+            f'bad format for file "{filename}".',
+            f"\n{error.strip()}",
+        ]
+        sys.stderr.write("\n".join(lines))
         sys.stderr.flush()
 
     def _check_file(self, filename, content):
