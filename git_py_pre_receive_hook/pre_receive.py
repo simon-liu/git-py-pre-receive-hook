@@ -1,12 +1,14 @@
 import pkgutil
 import subprocess
 import tempfile
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 import sys
 import yaml
 
 from git_py_pre_receive_hook.utils import CommandMixin, get_exe_path
+
+ChangedFile = namedtuple("ChangedFile", ["filename", "revision", "ref"])
 
 
 class Config(object):
@@ -30,6 +32,10 @@ class Config(object):
     @property
     def ignore_files(self):
         return set(self.settings.get("ignore_files", []))
+
+    @property
+    def check_master_only(self):
+        return self.settings.get("check_master_only", True)
 
 
 class Commit(object):
@@ -128,21 +134,24 @@ class Hook(CommandMixin):
 
     def run(self):
         errors = 0
-        for filename, revision in self.changed_files.items():
-            if not self._file_exists(filename, revision):
+        for changed_file in self.changed_files.values():
+            if self.config.check_master_only and not self._is_master(changed_file.ref):
                 continue
 
-            content = self._file_content(filename, revision)
-            if not self._is_py_file(filename, content):
+            if not self._file_exists(changed_file.filename, changed_file.revision):
                 continue
 
-            error = self._check_file(filename, content)
+            content = self._file_content(changed_file.filename, changed_file.revision)
+            if not self._is_py_file(changed_file.filename, content):
+                continue
+
+            error = self._check_file(changed_file.filename, content)
             if not error:
                 continue
 
-            self._print_error(filename, error)
+            self._print_error(changed_file.filename, error)
 
-            errors += 0 if self._ignore(filename) else 1
+            errors += 0 if self._ignore(changed_file.filename) else 1
             if errors >= self.SKIP_MORE_ERRORS:
                 return 0 if self.config.check_only else 1
 
@@ -165,7 +174,6 @@ class Hook(CommandMixin):
     def _print_error(self, filename, error):
         lines = [
             "\n" + "-" * 60,
-            f"\nbranch: {self._branch_name()}",
             f'bad format for file "{filename}".',
             f"\n{error.strip()}",
         ]
@@ -180,7 +188,7 @@ class Hook(CommandMixin):
         for commit in commits:
             for filename, revision in self._changed_files(commit).items():
                 if filename not in ret:
-                    ret[filename] = revision
+                    ret[filename] = ChangedFile(filename=filename, revision=revision, ref=commit.ref)
         return ret
 
     def _is_py_file(self, filename, content):
@@ -199,10 +207,8 @@ class Hook(CommandMixin):
         self.check_command_result(r)
         return r.stdout
 
-    def _branch_name(self):
-        r = self.run_command([self.GIT_EXE_PATH, "rev-parse", "--abbrev-ref", "HEAD"])
-        self.check_command_result(r)
-        return r.stdout.strip()
+    def _is_master(self, ref):
+        return ref == "refs/heads/master"
 
     def _load_config_content(self):
         if not self._file_exists(self.CONF_FILE, "HEAD"):

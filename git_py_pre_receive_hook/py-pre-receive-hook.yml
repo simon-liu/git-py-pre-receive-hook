@@ -7,3 +7,5 @@ black_cmd_args: [ "--line-length=120", "--diff", "-q" ]
 ignore_files: [ ]
 
 check_only: true
+
+check_master_only : true
