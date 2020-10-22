@@ -102,17 +102,17 @@ class DefaultChecker(CommandMixin):
             diff.append("")
             diff.append("Omit more ......")
 
-        return "\n".join(self._black_version() + ["Please apply patch:"] + diff)
+        return "\n".join(self._black_version() + ["Please apply patch:\n"] + diff)
 
     def _format_flake8_output(self, temp_filename, filename, output):
         lines = self._flake8_version() + output.strip().split("\n")
         return "\n".join([line.replace("%s:" % temp_filename, "%s:" % filename) for line in lines])
 
     def _flake8_version(self):
-        return ["flake8 --version"] + self.flake8_version.split("\n")
+        return ["flake8"] + self.flake8_version.split("\n")
 
     def _black_version(self):
-        return ["black --version"] + self.black_version.split("\n")
+        return self.black_version.split("\n")
 
 
 class Hook(CommandMixin):
