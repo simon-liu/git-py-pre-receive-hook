@@ -102,7 +102,7 @@ class DefaultChecker(CommandMixin):
             diff.append("")
             diff.append("Omit more ......")
 
-        return "\n".join(self._black_version() + ["difference:"] + diff)
+        return "\n".join(self._black_version() + ["Please apply patch:"] + diff)
 
     def _format_flake8_output(self, temp_filename, filename, output):
         lines = self._flake8_version() + output.strip().split("\n")
