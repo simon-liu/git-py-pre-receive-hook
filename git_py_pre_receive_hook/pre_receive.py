@@ -89,7 +89,6 @@ class DefaultChecker(CommandMixin):
                 return self.BLACK_FORMAT_ERROR_MESSAGE
 
             self.check_command_result(r)
-
             if r.stdout:
                 return self._format_black_output(r.stdout)
 
