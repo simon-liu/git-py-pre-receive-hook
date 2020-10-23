@@ -198,7 +198,11 @@ class Hook(CommandMixin):
         return first_line.startswith("#!") and first_line.find("python") > -1
 
     def _file_exists(self, filename, revision):
-        r = self.run_command([self.GIT_EXE_PATH, "show", revision + ":" + filename])
+        try:
+            r = self.run_command([self.GIT_EXE_PATH, "show", revision + ":" + filename])
+        except UnicodeDecodeError:
+            return False
+
         return r.return_code != self.GIT_FILE_DOES_NOT_EXISTS_ERROR
 
     def _file_content(self, filename, revision):
