@@ -1,9 +1,9 @@
 import pkgutil
 import subprocess
+import sys
 import tempfile
 from collections import OrderedDict, namedtuple
 
-import sys
 import yaml
 
 from git_py_pre_receive_hook.utils import CommandMixin, get_exe_path
@@ -47,6 +47,10 @@ class Commit(object):
     @property
     def old_is_null(self):
         return self.old_sha1 == "0000000000000000000000000000000000000000"
+
+    @property
+    def is_deleting(self):
+        return self.new_sha1 == "0000000000000000000000000000000000000000"
 
     @property
     def revisions(self):
@@ -185,6 +189,9 @@ class Hook(CommandMixin):
     def _collect_changed_files(self, commits):
         ret = OrderedDict()
         for commit in commits:
+            if commit.is_deleting:
+                continue
+
             for filename, revision in self._changed_files(commit).items():
                 if filename not in ret:
                     ret[filename] = ChangedFile(filename=filename, revision=revision, ref=commit.ref)
