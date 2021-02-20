@@ -201,6 +201,9 @@ class Hook(CommandMixin):
         if filename.endswith(".py"):
             return True
 
+        if not content.strip():
+            return False
+
         first_line = content.splitlines()[0]
         return first_line.startswith("#!") and first_line.find("python") > -1
 
