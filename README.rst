@@ -12,7 +12,7 @@
 
 .. class:: no-web
 
-    .. image:: ../master/screenshot.png?raw=true
+    .. image:: ../raw/master/screenshot.png?raw=true
         :width: 80%
         :align: left
 
