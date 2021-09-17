@@ -4,7 +4,7 @@
 安装
 ------------
 
-    pip3 install git+ssh://git@gitlab.zozo.cn/tech/git-py-pre-receive-hook.git
+    pip3 install git+ssh://git@gitlab.zozo.cn:tech/git-py-pre-receive-hook.git
 
     ln -s $(which git-py-pre-receive) /home/git/repositories/my-project.git/hooks/pre-receive
 
