@@ -95,7 +95,7 @@ class DefaultChecker(CommandMixin):
 
             self.check_command_result(r)
             if r.stdout:
-                return self._format_black_output(black_cmd, r.stdout)
+                return self._format_black_output(" ".join(black_cmd), r.stdout)
 
             return None
 
