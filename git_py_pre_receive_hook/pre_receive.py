@@ -88,14 +88,15 @@ class DefaultChecker(CommandMixin):
             if r.return_code == self.FLAKE8_COMMAND_ERROR_CODE:
                 return self._format_flake8_output(fp.name, filename, r.stdout)
 
-            black_cmd = [self.BLACK_EXE_PATH] + self.config.black_command_args + [fp.name]
-            r = self.run_command(black_cmd)
+            r = self.run_command([self.BLACK_EXE_PATH] + self.config.black_command_args + [fp.name])
             if r.return_code == self.BLACK_COMMAND_FORMAT_ERROR_CODE:
                 return self.BLACK_FORMAT_ERROR_MESSAGE
 
             self.check_command_result(r)
             if r.stdout:
-                return self._format_black_output(" ".join(black_cmd), r.stdout)
+                return self._format_black_output(
+                    " ".join(["black"] + self.config.black_command_args + [filename]), r.stdout
+                )
 
             return None
 
