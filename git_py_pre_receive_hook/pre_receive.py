@@ -88,24 +88,27 @@ class DefaultChecker(CommandMixin):
             if r.return_code == self.FLAKE8_COMMAND_ERROR_CODE:
                 return self._format_flake8_output(fp.name, filename, r.stdout)
 
-            r = self.run_command([self.BLACK_EXE_PATH] + self.config.black_command_args + [fp.name])
+            black_cmd = [self.BLACK_EXE_PATH] + self.config.black_command_args + [fp.name]
+            r = self.run_command(black_cmd)
             if r.return_code == self.BLACK_COMMAND_FORMAT_ERROR_CODE:
                 return self.BLACK_FORMAT_ERROR_MESSAGE
 
             self.check_command_result(r)
             if r.stdout:
-                return self._format_black_output(r.stdout)
+                return self._format_black_output(black_cmd, r.stdout)
 
             return None
 
-    def _format_black_output(self, stdout):
+    def _format_black_output(self, black_cmd, stdout):
         diff = stdout.split("\n")[2:]
         if len(diff) > self.DIFFERENCE_HIDE_MORE_LINES:
             diff = diff[: self.DIFFERENCE_HIDE_MORE_LINES]
             diff.append("")
             diff.append("Omit more ......")
 
-        return "\n".join(self._black_version() + ["Please apply patch:\n"] + diff)
+        return "\n".join(
+            self._black_version() + ["black format command: " + black_cmd] + ["Please apply patch:\n"] + diff
+        )
 
     def _format_flake8_output(self, temp_filename, filename, output):
         lines = self._flake8_version() + output.strip().split("\n")
