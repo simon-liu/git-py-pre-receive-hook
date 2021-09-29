@@ -2,7 +2,7 @@
 
 flake8_cmd_args: [ "--max-line-length=120", "--ignore=E203,E731,E722,W503" ]
 
-black_cmd_args: [ "--line-length=120", "--diff", "-q" ]
+black_cmd_args: [ "--line-length=120", "--skip-string-normalization", "--diff", "-q" ]
 
 ignore_files: [ ]
 
